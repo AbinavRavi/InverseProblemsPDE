@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 
 
 #create mesh and define function space
-mesh = UnitSquareMesh(16,16)
+mesh = UnitSquareMesh(10,10)
 V = FunctionSpace(mesh,'P',3)
 
 #define boundary conditions
-u_D = Expression('1+x[0]*x[0]+ 2*x[1]*x[1]',degree=2)
+u_D = Expression('1+x[0]*x[0]+ 2*x[1]*x[1]',degree=3)
 
 def boundary(x, on_boundary):
     return on_boundary
@@ -28,6 +28,10 @@ solve(a == L, u,bc)
 #plot solution and mesh
 plot(u)
 plot(mesh)
+
+#write to vtk file
+vtkfile = File('poisson/solution.pvd')
+vtkfile << u
 
 #compute the error in L2 norm
 error_L2 = errornorm(u_D, u, 'L2')
