@@ -1,13 +1,13 @@
 from fenics import *
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 #create mesh and define function space
-mesh = UnitSquareMesh(10,10)
-V = FunctionSpace(mesh,'P',3)
+mesh = UnitSquareMesh(100,100)
+V = FunctionSpace(mesh,'P',1)
 
 #define boundary conditions
-u_D = Expression('1+x[0]*x[0]+ 2*x[1]*x[1]',degree=3)
+u_D = Expression('1+x[0]*x[0]+ 2*x[1]*x[1]',degree=2)
 
 def boundary(x, on_boundary):
     return on_boundary
@@ -30,9 +30,13 @@ plot(u)
 plot(mesh)
 
 #write to vtk file
-vtkfile = File('poisson/solution.pvd')
-vtkfile << u
-
+# vtkfile = File('solution.pvd')
+# vtkfile << u
+x = V.tabulate_dof_coordinates()
+x = x.reshape((-1,mesh.geometry().dim()))
+# print(x)
+print(u.vector()[:])
+np.savetxt("sol100.txt",u.vector()[:])
 #compute the error in L2 norm
 error_L2 = errornorm(u_D, u, 'L2')
 
