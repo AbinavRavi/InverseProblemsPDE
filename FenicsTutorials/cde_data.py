@@ -21,4 +21,11 @@ bc = DirichletBC(V,u_D,boundary)
 
 u = TrialFunction(V)
 v = TestFunction(V)
+f = Constant(0.0)
 
+#define the variational problem
+F = ((u-u_n)/dt)*v*dx + dot(w,grad(u))*v*dx + dot(grad(u),grad(v))*dx - dot(f,v)*dx
+
+#solve the variational problem
+u = Function(V)
+solve(a == L,u,bc)
