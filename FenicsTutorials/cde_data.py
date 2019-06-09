@@ -22,8 +22,8 @@ u = TrialFunction(V)
 v = TestFunction(V)
 f = Constant(0.0)
 u_n = Function(V)
-w = Function(V)
-# + dot(w,grad(u))*v*dx
+w = Constant(1.0)
+# + dot(w,grad(u))*v*dx 
 #define the variational problem
 a = ((u-u_n)/dt)*v*dx + dot(grad(u),grad(v))*dx
 # a = lhs(F)
@@ -39,11 +39,13 @@ t = 0
 for n in range(num_steps):
     t+=dt
     b = assemble(L)
-    bc.apply(b)
-    solve(a == L,u,bc)
+    # bc.apply(b)
+    solve(a == 0,u,bc)
+    timeseries.store(u.vector(),t)
     plt.figure(n)
     plot(u)
     plt.show()
+    u_n.assign(u)
 
 def write(u,nx,ny):
     a = np.reshape(u.compute_vertex_values(),[nx+1,ny+1])
