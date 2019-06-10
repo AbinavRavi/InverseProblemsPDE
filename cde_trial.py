@@ -4,7 +4,7 @@ import numpy as np
 
 # Set the constants
 T = 10
-num_steps = 100
+num_steps = 5
 dt = T/num_steps
 nx = ny = 10
 
@@ -14,12 +14,12 @@ mesh = UnitSquareMesh(nx,ny)
 V = FunctionSpace(mesh,P)
 W = VectorFunctionSpace(mesh,'P',1)
 
-# set the boundary conditions
-# u_D = Expression('cos(x[0]+x[1])+sin(x[0]+x[1])',degree=1)
-# def boundary(x, on_boundary):
-#     return on_boundary
+# set the boundary conditions x[0] > DOLFIN_EPS  and x[0] < 1. - DOLFIN_EPS and x[1] > 1. - DOLFIN_EPS  and 
+u_D = Expression('cos(x[0]+x[1])+sin(x[0]+x[1])',degree=1)
+def boundary(x, on_boundary):
+    return on_boundary
 
-# bc = DirichletBC(V,u_D,boundary)
+bc = DirichletBC(V,u_D,boundary)
 
 # set the test and trial functions
 u = TrialFunction(V)
@@ -35,15 +35,19 @@ F = ((u - u_n) /dt)*v*dx + dot(w, grad(u))*v*dx + dot(grad(u), grad(v))*dx - f*v
 
 #create time series
 timeseries = TimeSeries('timeseries_cde')
+# Function to store data in np.array
+def write(u,nx,ny,timestep):
+    a = np.reshape(u.compute_vertex_values(),[nx+1,ny+1])
+    np.savetxt(str(timestep)+".csv",a,delimiter=",")
 
 t = 0
 for n in range(num_steps):
 
     # Update current time
     t += dt
-
-    # b = assemble(lhs(F))
-    # bc.apply(b)
+    A = assemble(lhs(F))
+    b = assemble(rhs(F))
+    bc.apply(b)
 
     # Read velocity from file
     timeseries.store(w.vector(), t)
@@ -51,14 +55,9 @@ for n in range(num_steps):
     # Solve variational problem for time step
     solve(F == 0, u)
 
-    # Save solution to file (VTK)
-    # _u_1, _u_2, _u_3 = u.split()
-    # vtkfile_u_1 << (_u_1, t)
-    # vtkfile_u_2 << (_u_2, t)
-    # vtkfile_u_3 << (_u_3, t)
-
     # Update previous solution
     u_n.assign(u)
+    # write(u,nx,ny,n)
     plot(u)
 
     # Update progress bar
