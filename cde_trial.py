@@ -4,7 +4,7 @@ import numpy as np
 
 # Set the constants
 T = 10
-num_steps = 5
+num_steps = 100
 dt = T/num_steps
 nx = ny = 10
 
@@ -14,7 +14,7 @@ mesh = UnitSquareMesh(nx,ny)
 V = FunctionSpace(mesh,P)
 W = VectorFunctionSpace(mesh,'P',1)
 
-# set the boundary conditions x[0] > DOLFIN_EPS  and x[0] < 1. - DOLFIN_EPS and x[1] > 1. - DOLFIN_EPS  and 
+# set the boundary conditions 
 u_D = Expression('cos(x[0]+x[1])+sin(x[0]+x[1])',degree=1)
 def boundary(x, on_boundary):
     return on_boundary
@@ -38,7 +38,7 @@ timeseries = TimeSeries('timeseries_cde')
 # Function to store data in np.array
 def write(u,nx,ny,timestep):
     a = np.reshape(u.compute_vertex_values(),[nx+1,ny+1])
-    np.savetxt(str(timestep)+".csv",a,delimiter=",")
+    np.savetxt('results/'+ str(timestep)+".csv",a,delimiter=",")
 
 t = 0
 for n in range(num_steps):
@@ -53,11 +53,11 @@ for n in range(num_steps):
     timeseries.store(w.vector(), t)
 
     # Solve variational problem for time step
-    solve(F == 0, u)
+    solve(F == 0, u,bc)
 
     # Update previous solution
     u_n.assign(u)
-    # write(u,nx,ny,n)
+    write(u,nx,ny,n)
     plot(u)
 
     # Update progress bar
