@@ -1,6 +1,7 @@
 from fenics import *
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 # Set the constants
 T = 10
@@ -48,7 +49,7 @@ w = Function(W)
 u = Function(V)
 u_n = Function(V)
 f = Constant(0.0)
-eps = Constant(1.0)
+eps = Constant(random.uniform(0.2,0.8))
 F = ((u - u_n) /dt)*v*dx + dot(w, grad(u))*v*dx + eps*dot(grad(u), grad(v))*dx - f*v*dx 
 # a = lhs(F)
 # L = rhs(F)
@@ -59,6 +60,7 @@ timeseries = TimeSeries('timeseries_cde')
 # Function to store data in np.array
 def write(u,nx,ny,timestep):
     a = np.reshape(u.compute_vertex_values(),[nx+1,ny+1])
+    
     np.savetxt('results/64grid/'+ str(timestep)+".csv",a,delimiter=",")
 
 t = 0
@@ -78,7 +80,7 @@ for n in range(num_steps):
 
     # Update previous solution
     u_n.assign(u)
-    write(u,nx,ny,n)
+    # write(u,nx,ny,n)
     plot(u)
     # plt.savefig('results/64grid/'+str(n)+'.png')
     # Update progress bar
