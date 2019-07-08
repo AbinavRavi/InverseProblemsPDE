@@ -2,8 +2,8 @@ from fenics import *
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-import torch
 import os
+from tqdm import tqdm
 
 #Function for setting the boundary condition as random initialisation
 def U0xy(V):
@@ -29,19 +29,20 @@ def boundary(x, on_boundary):
     return on_boundary
 
 # function to write the simulated quantities in a csv file
-# """TO DO: Modify the write file to store the multiple timesteps as a single tensor along with the velocity vector value and the diffusivity coefficient value """
-def write(u,nx,ny,timestep,num_steps,sim_number):
+def write(u,array,nx,ny,timestep,num_steps,sim_number):
     a = np.reshape(u.compute_vertex_values(),[nx+1,ny+1])
-    if not os.path.exists('results/64grid/'+str(sim_number)+'/'):
-        os.makedirs('results/64grid/'+str(sim_number)+'/')
-    np.savetxt('results/64grid/'+str(sim_number)+'/'+str(timestep)+".csv",a,delimiter=",")
+    if not os.path.exists('results/'+str(sim_number)+'/'):
+        os.makedirs('results/'+str(sim_number)+'/')
+    np.savetxt('results/'+str(sim_number)+'/'+str(timestep)+".csv",a,delimiter=",")
+    np.savetxt('results/'+str(sim_number)+'/'+str(timestep)+'_parameters'+".csv",array,delimiter=",")
 
+    
 def Simulation(nx,ny,T,num_steps,sim_number):
     dt = T/num_steps
-    P = FiniteElement('P',triangle,1)
+    P = FiniteElement('P',triangle,2)
     mesh = UnitSquareMesh(nx,ny)
     V = FunctionSpace(mesh,P)
-    W = VectorFunctionSpace(mesh,'P',1)
+    W = VectorFunctionSpace(mesh,'P',2)
 
     u_D = U0xy(V) #Expression('cos(x[0]+x[1])+sin(x[0]+x[1])',degree=1)
     bc = DirichletBC(V,u_D,boundary)
@@ -53,9 +54,10 @@ def Simulation(nx,ny,T,num_steps,sim_number):
     u = Function(V)
     u_n = Function(V)
     f = Constant(0.0)
+    k = Constant(np.random.uniform(-2,2))
     eps = Constant(random.uniform(0.2,0.8))
-    F = ((u - u_n) /dt)*v*dx + dot(w, grad(u))*v*dx + eps*dot(grad(u), grad(v))*dx - f*v*dx 
-
+    F = ((u - u_n) /dt)*v*dx + k*dot(w, grad(u))*v*dx + eps*dot(grad(u), grad(v))*dx - f*v*dx 
+    array = [k,eps]
     timeseries = TimeSeries('timeseries_cde')
     t = 0
     for n in range(1,num_steps+1):
@@ -74,13 +76,14 @@ def Simulation(nx,ny,T,num_steps,sim_number):
 
     # Update previous solution
         u_n.assign(u)
-        write(u,nx,ny,n,num_steps,sim_number)
+        write(u,array,nx,ny,n,num_steps,sim_number)
+        # print(u.compute_vertex_values().shape,w.compute_vertex_values().shape)
         plot(u)
         plt.axis('off')
-        plt.savefig('results/64grid/'+str(sim_number)+'/'+str(n)+'.png')
+        
+    # plt.savefig('results/64grid/'+str(sim_number)+'/'+str(n)+'.png')
     # Update progress bar
-    # progress.update(t / T)
-
+    # progress.update(t / T)   
 # Hold plot
 
 

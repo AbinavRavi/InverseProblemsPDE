@@ -77,7 +77,7 @@ def Simulation(nx,ny,T,num_steps,sim_number):
         write(u,nx,ny,n,num_steps,sim_number)
         plot(u)
         plt.axis('off')
-    plt.savefig('results/64grid/'+str(sim_number)+'/'+str(n)+'.png')
+    # plt.savefig('results/64grid/'+str(sim_number)+'/'+str(n)+'.png')
     # Update progress bar
     # progress.update(t / T)
 
