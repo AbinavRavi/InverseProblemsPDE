@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import os
-from tqdm import tqdm
+# import pandas as pd
 
 #Function for setting the boundary condition as random initialisation
 def U0xy(V):
@@ -37,51 +37,61 @@ def write_function_values(u,nx,ny,timestep,num_steps,sim_number):
     
 
 def write_parameters(array,sim_number):
-    np.savetxt('data/'+str(sim_number)+'_parameters'+".csv",array,delimiter=",")
+    np.savetxt('data/'+str(sim_number)+'_parameters'+".csv",array,delimiter=",",fmt='%s')
+    # np.savetxt('data/'+str(sim_number)+'_eps.csv',eps,delimiter=",",fmt='%s')
 
     
 def Simulation(nx,ny,T,num_steps,sim_number):
     dt = T/num_steps
-    P = FiniteElement('P',triangle,2)
-    mesh = UnitSquareMesh(nx,ny)
-    V = FunctionSpace(mesh,P)
+    Xmax = Ymax = 2*3.14           # range of 'x' and 'y'
+    mesh = RectangleMesh(Point(0, 0), Point(Xmax, Ymax), nx, ny)
+    poly=5
+    V = FunctionSpace(mesh, 'P', poly)
+    # P = FiniteElement('P',triangle,2)
+    # mesh = UnitSquareMesh(nx,ny)
+    # V = FunctionSpace(mesh,P)
     # W = VectorFunctionSpace(mesh,'P',2)
-    w_lower = Expression('-2.0',degree=2)
-    w_upper = Expression('2.0',degree=2)
-    eps_lower = Expression('0.2',degree=6)
-    eps_upper = Expression('0.8',degree=6)
-    u_D = U0xy(V) #Expression('cos(x[0]+x[1])+sin(x[0]+x[1])',degree=1)
-    bc = DirichletBC(V,u_D,boundary)
+    # sample = np.random.uniform(-2.0,2.0)
+    a = random.uniform(-2.0,2.0)
+    b = random.uniform(-2.0,2.0)
+    limit_A = Expression('a',degree=2, a = a)
+    limit_B = Expression('b',degree=2, b = b)
+    # sample2 = np.random.uniform(0.2,0.8)
+    c = random.uniform(0.2,0.8)
+    d = random.uniform(0.2,0.8)
+    eps_lower = Expression('c',degree=2, c = c)
+    eps_upper = Expression('d',degree=2, d = d)
+    # u_D = U0xy(V)
+    #Expression('cos(x[0]+x[1])+sin(x[0]+x[1])',degree=1)
+    # bc = DirichletBC(V,u_D,boundary)
+    bc = DirichletBC(V, Constant(0), boundary)
 
     # set the test and trial functions
     u = TrialFunction(V)
     v = TestFunction(V)
     # w = Function(W)
     u = Function(V)
-    u_n = Function(V)
+    u_n =  U0xy(V)
     f = Constant(0.0)
     # k = Constant(np.random.uniform(-2,2))
     # eps = Constant(random.uniform(0.2,0.8))
-    w = as_vector([w_lower,w_upper])
+    w = as_vector([limit_A,limit_B])
     eps = as_matrix([[eps_lower,0],[0,eps_upper]])
+    # print(eps.shape)
     DiffTerm=dot(dot(grad(u),eps),grad(v))*dx
     Convterm=dot(grad(u),w)*v*dx
     F=(u-u_n)*v*dx + dt*DiffTerm + dt*Convterm
+    array = [a,b,c,d]
     # F = ((u - u_n) /dt)*v*dx + k*dot(w, grad(u))*v*dx + eps*dot(grad(u), grad(v))*dx - f*v*dx 
-    array = [w,eps]
-    timeseries = TimeSeries('timeseries_cde')
     t = 0
     for n in range(1,num_steps+1):
     
     # Update current time
         t += dt
-        u_D.t = t 
-        A = assemble(lhs(F))
-        b = assemble(rhs(F))
-        bc.apply(b)
-
-    # Read velocity from file
-        # timeseries.store(w.vector(), t)
+        u_n.t = t 
+        # A = assemble(lhs(F))
+        # b = assemble(rhs(F))
+        # bc.apply(b)
 
     # Solve variational problem for time step
         solve(F == 0, u,bc)
@@ -93,8 +103,9 @@ def Simulation(nx,ny,T,num_steps,sim_number):
         # plt.axis('off')
         
         # plt.savefig('data/'+str(sim_number)+'/'+str(n)+'.png')
-    # write_parameters(array,sim_number)  
+    write_parameters(array,sim_number)  
+# Hold plot
 
 
-for i in range(1):
-    Simulation(64,64,10,100,i)
+for i in range(1,11):
+    Simulation(128,128,10,50,i)
