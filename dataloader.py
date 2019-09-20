@@ -20,18 +20,23 @@ class Ipde(Dataset):
         return np.array(data)
         
     def __len__(self):
-        return len(self.data)
+        return int(len(self.data)/5)
     
-    def getParameters(self,path):
+    def getParameters(self, path):
         newPath=path.split('/')[:-1]
         newPath='/'.join(newPath)
         parameterfile = newPath+'_parameters.csv'
         return parameterfile
 
     def __getitem__(self,index):
-        if (index+1)%50==0:
-            index-=1
+        res = (index+1)%50
+        index = np.random.randint(0, 10)+res*50
+#         if (index+1)%50==0:
+#             index-=1
         parameterfile = self.getParameters(self.data[index])
-        return np.squeeze(self.csvreader(parameterfile)),np.expand_dims(self.csvreader(self.data[index]),axis=0),np.expand_dims(self.csvreader(self.data[index+1]),axis=0)
+        tmp = []
+        for i in range(10):
+            tmp.append(np.expand_dims(self.csvreader(self.data[index+i]),axis=0))
+        return np.squeeze(self.csvreader(parameterfile)),np.expand_dims(self.csvreader(self.data[index]),axis=0), np.array(tmp)
     
         

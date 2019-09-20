@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import os
-# import pandas as pd
+import time
 
 #Function for setting the boundary condition as random initialisation
 def U0xy(V):
@@ -105,7 +105,13 @@ def Simulation(nx,ny,T,num_steps,sim_number):
         # plt.savefig('data/'+str(sim_number)+'/'+str(n)+'.png')
     write_parameters(array,sim_number)  
 # Hold plot
+start_time = time.time()
+file = open('time_fenics.txt','w+')
+for i in range(1):
+    start = time.time()
+    Simulation(64,64,10,1,i)
+    file.write(str(time.time() - start) +'\n')
+    break
+# print(str(time.time() - start_time))
+file.close()
 
-
-for i in range(1,11):
-    Simulation(128,128,10,50,i)
